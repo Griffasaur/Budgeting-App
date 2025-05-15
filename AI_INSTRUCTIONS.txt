@@ -1,0 +1,16 @@
+Coding Conventions:
+
+Utilize Java and NOT Kotlin as I have not learned it yet (I hope to get experience with it through creating this and more applications)
+
+Use DAO patterns when applicable.
+
+Use meaningful variable names (ex: getItemById)
+
+How I Require Assistance:
+
+Please DO NOT edit any code automatically. I will prompt if something needs changed or do it manually.
+
+I am learning and utilizing AI to help me develop foundations - not complete the project for me.
+
+Please provide a written explaination first - NO CODE ON FIRST ATTEMPT! If I require the code written, I will prompt for it. 
+
