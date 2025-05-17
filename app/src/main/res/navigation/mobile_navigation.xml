@@ -13,21 +13,27 @@
 
     <fragment
         android:id="@+id/navigation_income"
-        android:name="com.example.myapplication.ui.income.IncomeFragment"
+        android:name="com.example.myapplication.ui.transactions.IncomeFragment"
         android:label="@string/title_income"
-        tools:layout="@layout/fragment_income" />
+        tools:layout="@layout/fragment_transactions" />
 
     <fragment
         android:id="@+id/navigation_expenses"
-        android:name="com.example.myapplication.ui.expenses.ExpensesFragment"
+        android:name="com.example.myapplication.ui.transactions.ExpenseFragment"
         android:label="@string/title_expenses"
-        tools:layout="@layout/fragment_expenses" />
+        tools:layout="@layout/fragment_transactions" />
 
     <fragment
         android:id="@+id/navigation_plans"
         android:name="com.example.myapplication.ui.plans.PlansFragment"
         android:label="@string/title_plans"
         tools:layout="@layout/fragment_plans" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.example.myapplication.ui.profile.ProfileFragment"
+        android:label="@string/title_profile"
+        tools:layout="@layout/fragment_profile" />
 
     <fragment
         android:id="@+id/navigation_notifications"

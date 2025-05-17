@@ -7,4 +7,32 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Softer colors for text -->
+    <color name="soft_expense_amount">#c72660</color>
+    <color name="soft_income_amount">#377834</color>
+    <color name="soft_edit_button">#81b3d4</color>
+    <color name="soft_delete_button">#a37448</color>
+    
+    <!-- App Theme Colors -->
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    
+    <!-- Transaction Type Colors -->
+    <color name="income_color">#377834</color>
+    <color name="expense_color">#7a0932</color>
+    
+    <!-- Button Colors -->
+    <color name="edit_button_color">#758e9e</color>
+    <color name="delete_button_color">#a37448</color>
+    
+    <!-- Theme Colors -->
+    <color name="light_background">#F5F5F5</color>
+    <color name="dark_background">#121212</color>
+    <color name="light_card_background">#FFFFFF</color>
+    <color name="dark_card_background">#1F1F1F</color>
+    <color name="light_text_primary">#333333</color>
+    <color name="dark_text_primary">#E0E0E0</color>
+    <color name="light_text_secondary">#757575</color>
+    <color name="dark_text_secondary">#AEAEAE</color>
 </resources>

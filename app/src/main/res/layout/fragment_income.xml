@@ -42,7 +42,7 @@
                     android:layout_height="wrap_content"
                     android:text="$0.00"
                     android:textAppearance="?attr/textAppearanceHeadline5"
-                    android:textColor="@color/teal_700"
+                    android:textColor="@color/soft_income_amount"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -156,7 +156,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contentDescription="Add income"
-        android:src="@android:drawable/ic_input_add"
-        app:tint="@android:color/white" />
+        app:srcCompat="@android:drawable/ic_input_add" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout> 

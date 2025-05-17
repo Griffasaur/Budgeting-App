@@ -1,12 +1,14 @@
 package com.example.myapplication.repository;
 
 import android.app.Application;
-
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.Observer;
 
 import com.example.myapplication.database.AppDatabase;
 import com.example.myapplication.database.dao.TransactionDao;
-import com.example.myapplication.model.TransactionEntity;
+import com.example.myapplication.model.Transaction;
+import com.example.myapplication.model.TransactionType;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,67 +17,157 @@ import java.util.concurrent.Executors;
 
 /**
  * Repository that acts as a single source of truth for transaction data
+ * Uses the unified Transaction model and properly manages resources
  */
 public class TransactionRepository {
     private final TransactionDao transactionDao;
-    private final LiveData<List<TransactionEntity>> allTransactions;
     private final ExecutorService executorService;
+    
+    // Cache for commonly accessed data
+    private final MediatorLiveData<List<Transaction>> cachedIncomeTransactions = new MediatorLiveData<>();
+    private final MediatorLiveData<List<Transaction>> cachedExpenseTransactions = new MediatorLiveData<>();
 
     public TransactionRepository(Application application) {
         AppDatabase database = AppDatabase.getInstance(application);
         transactionDao = database.transactionDao();
-        allTransactions = transactionDao.getAllTransactions();
         executorService = Executors.newFixedThreadPool(4);
+        
+        // Initialize caches
+        cachedIncomeTransactions.addSource(transactionDao.getAllIncome(), cachedIncomeTransactions::setValue);
+        cachedExpenseTransactions.addSource(transactionDao.getAllExpenses(), cachedExpenseTransactions::setValue);
     }
 
     // Room executes all queries on a separate thread
-    public LiveData<List<TransactionEntity>> getAllTransactions() {
-        return allTransactions;
+    public LiveData<List<Transaction>> getAllTransactions() {
+        return transactionDao.getAll();
     }
 
-    public LiveData<List<TransactionEntity>> getTransactionsByType(String type) {
-        return transactionDao.getTransactionsByType(type);
+    public LiveData<Transaction> getTransactionById(long id) {
+        return transactionDao.getById(id);
     }
 
-    public LiveData<List<TransactionEntity>> getTransactionsByDateRange(LocalDate startDate, LocalDate endDate) {
-        return transactionDao.getTransactionsByDateRange(startDate, endDate);
+    public LiveData<List<Transaction>> getTransactionsByType(TransactionType type) {
+        return transactionDao.getByType(type);
+    }
+    
+    // Name sorting
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByName(TransactionType type) {
+        return transactionDao.getByTypeOrderByName(type);
+    }
+    
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByNameDesc(TransactionType type) {
+        return transactionDao.getByTypeOrderByNameDesc(type);
+    }
+    
+    // Amount sorting
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByAmount(TransactionType type) {
+        return transactionDao.getByTypeOrderByAmount(type);
+    }
+    
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByAmountAsc(TransactionType type) {
+        return transactionDao.getByTypeOrderByAmountAsc(type);
+    }
+    
+    // Frequency sorting
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByFrequency(TransactionType type) {
+        return transactionDao.getByTypeOrderByFrequency(type);
+    }
+    
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByFrequencyDesc(TransactionType type) {
+        return transactionDao.getByTypeOrderByFrequencyDesc(type);
+    }
+    
+    // Date sorting
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByDate(TransactionType type) {
+        return transactionDao.getByTypeOrderByDate(type);
+    }
+    
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByDateAsc(TransactionType type) {
+        return transactionDao.getByTypeOrderByDateAsc(type);
+    }
+    
+    // Due date sorting
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByNextDueDate(TransactionType type) {
+        return transactionDao.getByTypeOrderByNextDueDate(type);
+    }
+    
+    public LiveData<List<Transaction>> getTransactionsByTypeOrderByNextDueDateDesc(TransactionType type) {
+        return transactionDao.getByTypeOrderByNextDueDateDesc(type);
     }
 
-    public LiveData<List<TransactionEntity>> getAllIncomeTransactions() {
-        return transactionDao.getAllIncomeTransactions();
+    public LiveData<List<Transaction>> getTransactionsByDateRange(LocalDate startDate, LocalDate endDate) {
+        return transactionDao.getByDateRange(startDate, endDate);
     }
 
-    public LiveData<List<TransactionEntity>> getAllExpenseTransactions() {
-        return transactionDao.getAllExpenseTransactions();
+    public LiveData<List<Transaction>> getAllIncomeTransactions() {
+        return cachedIncomeTransactions;
     }
 
-    // You must call these methods on a non-UI thread
-    public void insert(TransactionEntity transaction) {
-        executorService.execute(() -> transactionDao.insertTransaction(transaction));
+    public LiveData<List<Transaction>> getAllExpenseTransactions() {
+        return cachedExpenseTransactions;
+    }
+    
+    public LiveData<String> getEstimatedMonthlyIncome() {
+        return transactionDao.getEstimatedMonthlyIncome();
+    }
+    
+    public LiveData<String> getEstimatedMonthlyExpense() {
+        return transactionDao.getEstimatedMonthlyExpense();
     }
 
-    public void update(TransactionEntity transaction) {
-        executorService.execute(() -> transactionDao.updateTransaction(transaction));
-    }
-
-    public void delete(TransactionEntity transaction) {
-        executorService.execute(() -> transactionDao.deleteTransaction(transaction));
-    }
-
-    public void deleteById(int id) {
-        executorService.execute(() -> transactionDao.deleteTransactionById(id));
-    }
-
-    // Method to get a single transaction by ID (requires custom handling since Room can't return non-LiveData on main thread)
-    public void getTransactionById(int id, OnTransactionLoadedListener listener) {
+    /**
+     * Updates next due dates for all transactions
+     * This should be called regularly (e.g., when the app starts) to ensure dates are current
+     */
+    public void updateNextDueDates() {
         executorService.execute(() -> {
-            TransactionEntity transaction = transactionDao.getTransactionById(id);
-            listener.onTransactionLoaded(transaction);
+            // Get all transactions directly (not as LiveData)
+            List<Transaction> allTransactions = transactionDao.getAllDirect();
+            LocalDate today = LocalDate.now();
+            boolean anyUpdated = false;
+            
+            for (Transaction transaction : allTransactions) {
+                LocalDate nextDueDate = transaction.getNextDueDate();
+                
+                // Check if due date is in the past and needs updating
+                if (nextDueDate != null && (nextDueDate.isBefore(today) || nextDueDate.isEqual(today))) {
+                    // Recalculate next due date by setting the start date
+                    // The Transaction class will handle the calculation
+                    transaction.setStartDate(transaction.getStartDate());
+                    transaction.setLastUpdatedDate(today);
+                    transactionDao.update(transaction);
+                    anyUpdated = true;
+                }
+            }
         });
     }
 
-    // Interface to handle async loading of individual transactions
-    public interface OnTransactionLoadedListener {
-        void onTransactionLoaded(TransactionEntity transaction);
+    // You must call these methods on a non-UI thread or use executors
+    public void insert(Transaction transaction) {
+        executorService.execute(() -> transactionDao.insert(transaction));
+    }
+
+    public void update(Transaction transaction) {
+        // Update lastUpdatedDate before saving
+        transaction.setLastUpdatedDate(LocalDate.now());
+        executorService.execute(() -> transactionDao.update(transaction));
+    }
+
+    public void delete(Transaction transaction) {
+        executorService.execute(() -> transactionDao.delete(transaction));
+    }
+
+    public void deleteById(long id) {
+        executorService.execute(() -> transactionDao.deleteById(id));
+    }
+    
+    /**
+     * Cleanup method to properly shut down executor service
+     * Should be called in onCleared() of ViewModel
+     */
+    public void cleanup() {
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
     }
 }

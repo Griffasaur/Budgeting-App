@@ -6,6 +6,10 @@
             android:icon="@drawable/ic_settings_24dp"
             android:title="Settings" />
         <item
+            android:id="@+id/nav_theme"
+            android:icon="@drawable/ic_palette_24dp"
+            android:title="Theme" />
+        <item
             android:id="@+id/nav_about"
             android:icon="@drawable/ic_info_24dp"
             android:title="About" />

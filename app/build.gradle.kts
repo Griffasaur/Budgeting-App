@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
     implementation(libs.room.common.jvm)
+    implementation(libs.lifecycle.process)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -52,4 +53,11 @@ dependencies {
     
     // Circle ImageView for profile pictures
     implementation("de.hdodenhof:circleimageview:3.1.0")
+    
+    // Google Sign-In dependencies
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    
+    // Glide for image loading
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 }
