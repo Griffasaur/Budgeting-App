@@ -7,9 +7,12 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.example.myapplication.BudgetApplication;
+import com.example.myapplication.auth.AuthManager;
 import com.example.myapplication.model.Frequency;
 import com.example.myapplication.model.Transaction;
 import com.example.myapplication.model.TransactionType;
+import com.example.myapplication.model.User;
 import com.example.myapplication.repository.TransactionRepository;
 import com.example.myapplication.utils.UserPreferences;
 
@@ -24,6 +27,7 @@ public class HomeViewModel extends AndroidViewModel {
     private final TransactionRepository transactionRepository;
     private final UserPreferences userPreferences;
     private final DateTimeFormatter dateFormatter;
+    private final AuthManager authManager;
     
     // LiveData for the welcome message
     private final MutableLiveData<String> welcomeMessage = new MutableLiveData<>();
@@ -43,6 +47,7 @@ public class HomeViewModel extends AndroidViewModel {
         // Initialize repositories and preferences
         transactionRepository = new TransactionRepository(application);
         userPreferences = new UserPreferences(application);
+        authManager = ((BudgetApplication) application).getAuthManager();
         
         // Initialize date formatter
         dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
@@ -56,14 +61,28 @@ public class HomeViewModel extends AndroidViewModel {
         // Get transactions due today
         LocalDate today = LocalDate.now();
         todayTransactions = transactionRepository.getTransactionsByDateRange(today, today);
+        
+        // Observe auth state changes to update welcome message
+        authManager.getCurrentUser().observeForever(user -> {
+            if (user != null) {
+                welcomeMessage.setValue("Welcome, " + user.getDisplayName() + "!");
+            }
+        });
     }
     
     /**
      * Updates the welcome message with the user's name
      */
     public void updateWelcomeMessage() {
-        String userName = userPreferences.getUserName();
-        welcomeMessage.setValue("Welcome, " + userName + "!");
+        // First try to get name from auth manager
+        User currentUser = authManager.getCurrentUser().getValue();
+        if (currentUser != null && currentUser.getDisplayName() != null) {
+            welcomeMessage.setValue("Welcome, " + currentUser.getDisplayName() + "!");
+        } else {
+            // Fall back to preferences
+            String userName = userPreferences.getUserName();
+            welcomeMessage.setValue("Welcome, " + userName + "!");
+        }
     }
     
     /**

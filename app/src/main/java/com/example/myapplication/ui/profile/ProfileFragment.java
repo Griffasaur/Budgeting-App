@@ -47,9 +47,15 @@ public class ProfileFragment extends Fragment {
                 if (result.getResultCode() == android.app.Activity.RESULT_OK) {
                     // Handle sign in success
                     viewModel.handleSignInResult(result.getData());
+                    Toast.makeText(requireContext(), "Attempting to sign in...", Toast.LENGTH_SHORT).show();
                 } else {
                     // Handle sign in failure
-                    Toast.makeText(requireContext(), "Sign in failed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), 
+                        "Sign in failed: The Google sign-in was not completed", 
+                        Toast.LENGTH_LONG).show();
+                    
+                    // Log the error for debugging
+                    android.util.Log.e("ProfileFragment", "Sign in result code: " + result.getResultCode());
                 }
             });
 

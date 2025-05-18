@@ -40,6 +40,8 @@ public class AuthManager {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .requestProfile()
+                // Use string resource for client ID
+                .requestIdToken(context.getString(com.example.myapplication.R.string.default_web_client_id))
                 .build();
         
         googleSignInClient = GoogleSignIn.getClient(context, gso);
@@ -92,6 +94,10 @@ public class AuthManager {
         } catch (ApiException e) {
             // Sign in failed
             isAuthenticated.setValue(false);
+            
+            // Log detailed error information
+            android.util.Log.e("AuthManager", "Google sign in failed", e);
+            android.util.Log.e("AuthManager", "Error code: " + e.getStatusCode());
         }
     }
     

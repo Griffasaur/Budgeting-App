@@ -37,6 +37,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.myapplication.databinding.ActivityMainBinding;
 import com.example.myapplication.repository.TransactionRepository;
+import com.example.myapplication.utils.UserPreferences;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -57,6 +58,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         
         // Update transaction due dates
         transactionRepository.updateNextDueDates();
+        
+        // Check if this is the first launch or if user is not logged in
+        UserPreferences userPreferences = new UserPreferences(this);
+        boolean needsSignIn = userPreferences.isFirstLaunch() || !userPreferences.isLoggedIn();
 
         // Configure for edge-to-edge display
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
@@ -82,6 +87,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         
         // Make sure the drawer toggle is visible
         toggle.setDrawerIndicatorEnabled(true);
+        
+        // Handle back navigation when in profile screen
+        toggle.setToolbarNavigationClickListener(v -> {
+            if (navController.getCurrentDestination() != null && 
+                navController.getCurrentDestination().getId() == R.id.navigation_profile) {
+                navController.popBackStack();
+            }
+        });
         
         // Store toggle reference for use in destination changed listener
         drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
@@ -132,8 +145,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             
             if (destinationId == R.id.navigation_profile) {
                 // We're in profile - show back button by removing drawer toggle
+                toggle.setDrawerIndicatorEnabled(false);
                 if (getSupportActionBar() != null) {
-                    toggle.setDrawerIndicatorEnabled(false);
                     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                     getSupportActionBar().setDisplayShowHomeEnabled(true);
                 }
@@ -146,9 +159,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 if (inProfileScreen[0]) {
                     // Coming back from profile, restore drawer toggle
+                    toggle.setDrawerIndicatorEnabled(true);
                     if (getSupportActionBar() != null) {
                         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-                        toggle.setDrawerIndicatorEnabled(true);
                         toggle.syncState();
                     }
                 }
@@ -302,6 +315,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Close drawer on back press if open
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (navController.getCurrentDestination() != null && 
+                   navController.getCurrentDestination().getId() == R.id.navigation_profile) {
+            // Navigate back from profile
+            navController.navigateUp();
         } else {
             super.onBackPressed();
         }
@@ -312,9 +329,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Check current destination
         if (navController.getCurrentDestination() != null && 
             navController.getCurrentDestination().getId() == R.id.navigation_profile) {
-            // When in profile screen, navigate to home on up button
-            navController.navigate(R.id.navigation_home);
-            return true;
+            // When in profile screen, navigate back
+            return navController.navigateUp();
         }
         
         // Otherwise use default behavior
@@ -327,5 +343,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (transactionRepository != null) {
             transactionRepository.cleanup();
         }
+    }
+    
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        
+        // Check if this is the first launch or if user is not logged in
+        UserPreferences userPreferences = new UserPreferences(this);
+        boolean needsSignIn = userPreferences.isFirstLaunch() || !userPreferences.isLoggedIn();
+        
+        if (needsSignIn) {
+            // Show Google Sign-In dialog
+            showGoogleSignInDialog();
+        }
+    }
+    
+    /**
+     * Shows a dialog prompting the user to sign in with Google
+     */
+    private void showGoogleSignInDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Welcome to Budget App")
+            .setMessage("Sign in with your Google account to get the most out of this app.")
+            .setPositiveButton("Sign In", (dialog, which) -> {
+                // Navigate to profile page which has the sign in button
+                navController.navigate(R.id.navigation_profile);
+            })
+            .setNegativeButton("Later", null)
+            .setCancelable(true)
+            .show();
     }
 }
